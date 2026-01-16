@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>4-Player Chess</title>
+    <title>8-Player Chess</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fira+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fira+Sans:wght@300;400;600&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -27,6 +27,14 @@
             --green-light: #2ecc71;
             --yellow: #f39c12;
             --yellow-light: #f1c40f;
+            --purple: #8e44ad;
+            --purple-light: #9b59b6;
+            --orange: #d35400;
+            --orange-light: #e67e22;
+            --pink: #e91e63;
+            --pink-light: #f06292;
+            --cyan: #00bcd4;
+            --cyan-light: #26c6da;
             --board-light: #f5e6d3;
             --board-dark: #b58863;
             --bg-dark: #1a1a2e;
@@ -38,8 +46,8 @@
 
         html, body {
             height: 100%;
-            overflow: hidden;
-            touch-action: none;
+            overflow: auto;
+            touch-action: pan-y;
         }
 
         body {
@@ -48,7 +56,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
             padding: 10px;
         }
@@ -56,9 +63,9 @@
         h1 {
             font-family: 'Cinzel', serif;
             color: var(--gold);
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-size: clamp(1.3rem, 3vw, 2rem);
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
             letter-spacing: 0.1em;
         }
@@ -67,58 +74,89 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
             width: 100%;
-            max-width: 95vmin;
+            max-width: 1200px;
         }
 
-        .turn-indicator {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .player-badge {
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            opacity: 0.5;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            display: flex;
-            align-items: center;
+        .clocks-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
+            width: 100%;
+            max-width: 800px;
         }
 
-        .player-badge.active {
-            opacity: 1;
-            transform: scale(1.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        .clock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
         }
 
-        .player-badge.eliminated {
+        .clock.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .clock.eliminated {
             opacity: 0.3;
-            text-decoration: line-through;
         }
 
-        .player-badge.red { background: var(--red); color: white; border-color: var(--red-light); }
-        .player-badge.blue { background: var(--blue); color: white; border-color: var(--blue-light); }
-        .player-badge.yellow { background: var(--yellow); color: #333; border-color: var(--yellow-light); }
-        .player-badge.green { background: var(--green); color: white; border-color: var(--green-light); }
-
-        .crown {
-            display: none;
+        .clock.timeout {
+            background: rgba(255, 0, 0, 0.3);
         }
 
-        .player-badge.active .crown {
-            display: inline;
+        .clock.red { border-color: var(--red); }
+        .clock.blue { border-color: var(--blue); }
+        .clock.green { border-color: var(--green); }
+        .clock.yellow { border-color: var(--yellow); }
+        .clock.purple { border-color: var(--purple); }
+        .clock.orange { border-color: var(--orange); }
+        .clock.pink { border-color: var(--pink); }
+        .clock.cyan { border-color: var(--cyan); }
+
+        .clock-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .clock.red .clock-label { color: var(--red-light); }
+        .clock.blue .clock-label { color: var(--blue-light); }
+        .clock.green .clock-label { color: var(--green-light); }
+        .clock.yellow .clock-label { color: var(--yellow-light); }
+        .clock.purple .clock-label { color: var(--purple-light); }
+        .clock.orange .clock-label { color: var(--orange-light); }
+        .clock.pink .clock-label { color: var(--pink-light); }
+        .clock.cyan .clock-label { color: var(--cyan-light); }
+
+        .clock-time {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            color: white;
+            font-weight: 700;
+        }
+
+        .clock.low-time .clock-time {
+            color: #ff6b6b;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .board-wrapper {
             position: relative;
-            padding: 15px;
+            padding: 10px;
             background: linear-gradient(145deg, #2d2d44, #1a1a2e);
             border-radius: 12px;
             box-shadow: 
@@ -128,11 +166,11 @@
 
         .board {
             display: grid;
-            grid-template-columns: repeat(14, 1fr);
-            grid-template-rows: repeat(14, 1fr);
+            grid-template-columns: repeat(16, 1fr);
+            grid-template-rows: repeat(16, 1fr);
             gap: 0;
-            width: min(80vmin, 700px);
-            height: min(80vmin, 700px);
+            width: min(75vmin, 650px);
+            height: min(75vmin, 650px);
             border: 3px solid var(--gold);
             border-radius: 4px;
             overflow: hidden;
@@ -142,7 +180,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(1.2rem, 4vmin, 2.5rem);
+            font-size: clamp(0.9rem, 3.5vmin, 2rem);
             cursor: pointer;
             position: relative;
             transition: background-color 0.15s ease;
@@ -186,6 +224,10 @@
         .piece.blue { color: var(--blue); }
         .piece.yellow { color: var(--yellow); }
         .piece.green { color: var(--green); }
+        .piece.purple { color: var(--purple); }
+        .piece.orange { color: var(--orange); }
+        .piece.pink { color: var(--pink); }
+        .piece.cyan { color: var(--cyan); }
 
         .cell:active .piece {
             transform: scale(1.15);
@@ -193,15 +235,15 @@
 
         .controls {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         button {
             font-family: 'Cinzel', serif;
-            padding: 12px 30px;
-            font-size: 1rem;
+            padding: 10px 20px;
+            font-size: 0.9rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -222,19 +264,44 @@
             transform: translateY(0);
         }
 
+        button.secondary {
+            background: linear-gradient(145deg, #444, #333);
+            color: #ddd;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .time-settings {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        .time-settings select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #2a2a3e;
+            color: white;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
         .message {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(26, 26, 46, 0.95);
-            padding: 30px 50px;
+            padding: 25px 40px;
             border-radius: 15px;
             border: 3px solid var(--gold);
             text-align: center;
             z-index: 100;
             display: none;
             animation: popIn 0.3s ease;
+            max-width: 90vw;
         }
 
         @keyframes popIn {
@@ -251,14 +318,14 @@
         .message h2 {
             font-family: 'Cinzel', serif;
             color: var(--gold);
-            font-size: 1.8rem;
-            margin-bottom: 15px;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
         }
 
         .message p {
             color: #eee;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
+            font-size: 1rem;
+            margin-bottom: 15px;
         }
 
         .overlay {
@@ -274,41 +341,42 @@
 
         .info {
             color: #888;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: center;
-            max-width: 400px;
+            max-width: 500px;
         }
 
         @media (max-width: 600px) {
-            .player-badge {
-                padding: 6px 12px;
-                font-size: 0.8rem;
+            .clocks-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+            }
+            
+            .clock {
+                padding: 5px 8px;
+            }
+            
+            .clock-label {
+                font-size: 0.65rem;
+            }
+            
+            .clock-time {
+                font-size: 0.9rem;
             }
             
             .board {
-                width: 90vmin;
-                height: 90vmin;
+                width: 92vmin;
+                height: 92vmin;
             }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>4-Player Chess</h1>
+        <h1>8-Player Chess</h1>
         
-        <div class="turn-indicator">
-            <div class="player-badge red" data-player="red">
-                <span class="crown">&#9813;</span> Red
-            </div>
-            <div class="player-badge blue" data-player="blue">
-                <span class="crown">&#9813;</span> Blue
-            </div>
-            <div class="player-badge yellow" data-player="yellow">
-                <span class="crown">&#9813;</span> Yellow
-            </div>
-            <div class="player-badge green" data-player="green">
-                <span class="crown">&#9813;</span> Green
-            </div>
+        <div class="clocks-container" id="clocks">
+            <!-- Clocks will be generated by JS -->
         </div>
 
         <div class="board-wrapper">
@@ -317,10 +385,22 @@
 
         <div class="controls">
             <button onclick="resetGame()">New Game</button>
-            <button onclick="undoMove()">Undo</button>
+            <button onclick="undoMove()" class="secondary">Undo</button>
+            <button onclick="togglePause()" class="secondary" id="pauseBtn">Pause</button>
         </div>
 
-        <p class="info">Tap a piece to select, then tap a highlighted square to move. Capture all enemy kings to win!</p>
+        <div class="time-settings">
+            <label>Time per player:</label>
+            <select id="timeSelect" onchange="updateTimeSelection()">
+                <option value="60">1 min</option>
+                <option value="180">3 min</option>
+                <option value="300" selected>5 min</option>
+                <option value="600">10 min</option>
+                <option value="900">15 min</option>
+            </select>
+        </div>
+
+        <p class="info">8 players share the iPad. Tap your piece to select, then tap a highlighted square to move. Capture enemy kings or let their time run out to eliminate them!</p>
     </div>
 
     <div class="overlay" id="overlay"></div>
@@ -331,21 +411,25 @@
     </div>
 
     <script>
-        // 4-Player Chess Game Logic
-        const BOARD_SIZE = 14;
+        // 8-Player Chess Game Logic
+        const BOARD_SIZE = 16;
         const CORNER_SIZE = 3;
         
-        // Player colors and their directions (which way pawns move)
-        const PLAYERS = {
-            red: { color: '#c0392b', direction: 1, symbol: 'R' },    // Top, moves down
-            blue: { color: '#2980b9', direction: -1, symbol: 'B' },  // Right, moves left
-            yellow: { color: '#f39c12', direction: -1, symbol: 'Y' }, // Bottom, moves up
-            green: { color: '#27ae60', direction: 1, symbol: 'G' }   // Left, moves right
+        // Player colors and positions
+        const PLAYERS = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink'];
+        
+        const PLAYER_CONFIG = {
+            red:    { color: '#c0392b', position: 'top' },
+            orange: { color: '#d35400', position: 'top-right' },
+            yellow: { color: '#f39c12', position: 'right' },
+            green:  { color: '#27ae60', position: 'bottom-right' },
+            cyan:   { color: '#00bcd4', position: 'bottom' },
+            blue:   { color: '#2980b9', position: 'bottom-left' },
+            purple: { color: '#8e44ad', position: 'left' },
+            pink:   { color: '#e91e63', position: 'top-left' }
         };
 
-        const TURN_ORDER = ['red', 'blue', 'yellow', 'green'];
-
-        // Piece unicode characters with color variants
+        // Piece unicode characters
         const PIECES = {
             king: { white: '\u2654', black: '\u265A' },
             queen: { white: '\u2655', black: '\u265B' },
@@ -363,16 +447,21 @@
         let moveHistory = [];
         let eliminatedPlayers = new Set();
         let lastMove = null;
+        let gameStarted = false;
+        let gamePaused = false;
+        let clockInterval = null;
+        let playerTimes = {};
+        let initialTime = 300; // 5 minutes default
 
         // Check if a position is in the corner (invalid area)
         function isCorner(row, col) {
-            // Top-left corner
+            // Top-left
             if (row < CORNER_SIZE && col < CORNER_SIZE) return true;
-            // Top-right corner
+            // Top-right
             if (row < CORNER_SIZE && col >= BOARD_SIZE - CORNER_SIZE) return true;
-            // Bottom-left corner
+            // Bottom-left
             if (row >= BOARD_SIZE - CORNER_SIZE && col < CORNER_SIZE) return true;
-            // Bottom-right corner
+            // Bottom-right
             if (row >= BOARD_SIZE - CORNER_SIZE && col >= BOARD_SIZE - CORNER_SIZE) return true;
             return false;
         }
@@ -380,6 +469,97 @@
         // Check if position is valid on board
         function isValidPosition(row, col) {
             return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && !isCorner(row, col);
+        }
+
+        // Initialize clocks display
+        function initializeClocks() {
+            const clocksContainer = document.getElementById('clocks');
+            clocksContainer.innerHTML = '';
+            
+            PLAYERS.forEach(player => {
+                playerTimes[player] = initialTime;
+                const clock = document.createElement('div');
+                clock.className = `clock ${player}`;
+                clock.id = `clock-${player}`;
+                clock.innerHTML = `
+                    <span class="clock-label">${player}</span>
+                    <span class="clock-time" id="time-${player}">${formatTime(initialTime)}</span>
+                `;
+                clocksContainer.appendChild(clock);
+            });
+        }
+
+        // Format time as MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update clock display
+        function updateClockDisplay() {
+            PLAYERS.forEach(player => {
+                const timeEl = document.getElementById(`time-${player}`);
+                const clockEl = document.getElementById(`clock-${player}`);
+                if (timeEl && clockEl) {
+                    timeEl.textContent = formatTime(playerTimes[player]);
+                    
+                    clockEl.classList.remove('active', 'low-time');
+                    clockEl.classList.toggle('eliminated', eliminatedPlayers.has(player));
+                    
+                    if (player === currentPlayer && !eliminatedPlayers.has(player) && gameStarted && !gamePaused) {
+                        clockEl.classList.add('active');
+                    }
+                    
+                    if (playerTimes[player] <= 30 && !eliminatedPlayers.has(player)) {
+                        clockEl.classList.add('low-time');
+                    }
+                    
+                    if (playerTimes[player] <= 0) {
+                        clockEl.classList.add('timeout');
+                    }
+                }
+            });
+        }
+
+        // Start clock ticker
+        function startClock() {
+            if (clockInterval) clearInterval(clockInterval);
+            
+            clockInterval = setInterval(() => {
+                if (gamePaused || !gameStarted) return;
+                
+                if (playerTimes[currentPlayer] > 0 && !eliminatedPlayers.has(currentPlayer)) {
+                    playerTimes[currentPlayer]--;
+                    updateClockDisplay();
+                    
+                    if (playerTimes[currentPlayer] <= 0) {
+                        eliminateByTimeout(currentPlayer);
+                    }
+                }
+            }, 1000);
+        }
+
+        // Eliminate player by timeout
+        function eliminateByTimeout(player) {
+            eliminatedPlayers.add(player);
+            showMessage(`${player.charAt(0).toUpperCase() + player.slice(1)} ran out of time!`, 'They have been eliminated.');
+            
+            checkForWinner();
+            nextTurn();
+            renderBoard();
+        }
+
+        // Toggle pause
+        function togglePause() {
+            gamePaused = !gamePaused;
+            document.getElementById('pauseBtn').textContent = gamePaused ? 'Resume' : 'Pause';
+            updateClockDisplay();
+        }
+
+        // Update time selection
+        function updateTimeSelection() {
+            initialTime = parseInt(document.getElementById('timeSelect').value);
         }
 
         // Initialize the board with starting positions
@@ -392,38 +572,93 @@
                 }
             }
 
-            // Red pieces (top, rows 0-1, cols 3-10)
-            const redBackRow = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
-            for (let i = 0; i < 8; i++) {
-                board[0][3 + i] = { type: redBackRow[i], player: 'red' };
-                board[1][3 + i] = { type: 'pawn', player: 'red' };
+            // Red (top center) - rows 0-1, cols 5-10
+            const standardBack = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop'];
+            for (let i = 0; i < 6; i++) {
+                board[0][5 + i] = { type: standardBack[i], player: 'red' };
+                board[1][5 + i] = { type: 'pawn', player: 'red' };
             }
 
-            // Yellow pieces (bottom, rows 12-13, cols 3-10)
-            const yellowBackRow = ['rook', 'knight', 'bishop', 'king', 'queen', 'bishop', 'knight', 'rook'];
-            for (let i = 0; i < 8; i++) {
-                board[13][3 + i] = { type: yellowBackRow[i], player: 'yellow' };
-                board[12][3 + i] = { type: 'pawn', player: 'yellow' };
+            // Cyan (bottom center) - rows 14-15, cols 5-10
+            const cyanBack = ['bishop', 'king', 'queen', 'bishop', 'knight', 'rook'];
+            for (let i = 0; i < 6; i++) {
+                board[15][5 + i] = { type: cyanBack[i], player: 'cyan' };
+                board[14][5 + i] = { type: 'pawn', player: 'cyan' };
             }
 
-            // Green pieces (left, cols 0-1, rows 3-10)
-            const greenBackCol = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
-            for (let i = 0; i < 8; i++) {
-                board[3 + i][0] = { type: greenBackCol[i], player: 'green' };
-                board[3 + i][1] = { type: 'pawn', player: 'green' };
+            // Purple (left center) - cols 0-1, rows 5-10
+            const purpleBack = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop'];
+            for (let i = 0; i < 6; i++) {
+                board[5 + i][0] = { type: purpleBack[i], player: 'purple' };
+                board[5 + i][1] = { type: 'pawn', player: 'purple' };
             }
 
-            // Blue pieces (right, cols 12-13, rows 3-10)
-            const blueBackCol = ['rook', 'knight', 'bishop', 'king', 'queen', 'bishop', 'knight', 'rook'];
-            for (let i = 0; i < 8; i++) {
-                board[3 + i][13] = { type: blueBackCol[i], player: 'blue' };
-                board[3 + i][12] = { type: 'pawn', player: 'blue' };
+            // Yellow (right center) - cols 14-15, rows 5-10
+            const yellowBack = ['bishop', 'king', 'queen', 'bishop', 'knight', 'rook'];
+            for (let i = 0; i < 6; i++) {
+                board[5 + i][15] = { type: yellowBack[i], player: 'yellow' };
+                board[5 + i][14] = { type: 'pawn', player: 'yellow' };
             }
+
+            // Pink (top-left diagonal) - corner area
+            board[0][3] = { type: 'rook', player: 'pink' };
+            board[0][4] = { type: 'knight', player: 'pink' };
+            board[1][3] = { type: 'bishop', player: 'pink' };
+            board[1][4] = { type: 'queen', player: 'pink' };
+            board[2][3] = { type: 'king', player: 'pink' };
+            board[2][4] = { type: 'bishop', player: 'pink' };
+            board[3][0] = { type: 'rook', player: 'pink' };
+            board[3][1] = { type: 'pawn', player: 'pink' };
+            board[3][2] = { type: 'pawn', player: 'pink' };
+            board[4][0] = { type: 'knight', player: 'pink' };
+            board[4][1] = { type: 'pawn', player: 'pink' };
+            board[4][2] = { type: 'pawn', player: 'pink' };
+
+            // Orange (top-right diagonal) - corner area
+            board[0][11] = { type: 'knight', player: 'orange' };
+            board[0][12] = { type: 'rook', player: 'orange' };
+            board[1][11] = { type: 'queen', player: 'orange' };
+            board[1][12] = { type: 'bishop', player: 'orange' };
+            board[2][11] = { type: 'bishop', player: 'orange' };
+            board[2][12] = { type: 'king', player: 'orange' };
+            board[3][13] = { type: 'pawn', player: 'orange' };
+            board[3][14] = { type: 'pawn', player: 'orange' };
+            board[3][15] = { type: 'rook', player: 'orange' };
+            board[4][13] = { type: 'pawn', player: 'orange' };
+            board[4][14] = { type: 'pawn', player: 'orange' };
+            board[4][15] = { type: 'knight', player: 'orange' };
+
+            // Green (bottom-right diagonal) - corner area
+            board[11][15] = { type: 'knight', player: 'green' };
+            board[11][14] = { type: 'pawn', player: 'green' };
+            board[11][13] = { type: 'pawn', player: 'green' };
+            board[12][15] = { type: 'rook', player: 'green' };
+            board[12][14] = { type: 'pawn', player: 'green' };
+            board[12][13] = { type: 'pawn', player: 'green' };
+            board[13][12] = { type: 'king', player: 'green' };
+            board[13][11] = { type: 'bishop', player: 'green' };
+            board[14][12] = { type: 'bishop', player: 'green' };
+            board[14][11] = { type: 'queen', player: 'green' };
+            board[15][12] = { type: 'rook', player: 'green' };
+            board[15][11] = { type: 'knight', player: 'green' };
+
+            // Blue (bottom-left diagonal) - corner area
+            board[11][0] = { type: 'knight', player: 'blue' };
+            board[11][1] = { type: 'pawn', player: 'blue' };
+            board[11][2] = { type: 'pawn', player: 'blue' };
+            board[12][0] = { type: 'rook', player: 'blue' };
+            board[12][1] = { type: 'pawn', player: 'blue' };
+            board[12][2] = { type: 'pawn', player: 'blue' };
+            board[13][3] = { type: 'king', player: 'blue' };
+            board[13][4] = { type: 'bishop', player: 'blue' };
+            board[14][3] = { type: 'bishop', player: 'blue' };
+            board[14][4] = { type: 'queen', player: 'blue' };
+            board[15][3] = { type: 'rook', player: 'blue' };
+            board[15][4] = { type: 'knight', player: 'blue' };
         }
 
         // Get piece symbol
         function getPieceSymbol(piece) {
-            // Use white (filled) pieces for solid color appearance
             return PIECES[piece.type].white;
         }
 
@@ -452,12 +687,10 @@
                             cell.appendChild(pieceEl);
                         }
 
-                        // Highlight selected cell
                         if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
                             cell.classList.add('selected');
                         }
 
-                        // Highlight valid moves
                         if (validMoves.some(m => m.row === row && m.col === col)) {
                             if (board[row][col]) {
                                 cell.classList.add('valid-capture');
@@ -466,7 +699,6 @@
                             }
                         }
 
-                        // Highlight last move
                         if (lastMove && ((lastMove.from.row === row && lastMove.from.col === col) ||
                             (lastMove.to.row === row && lastMove.to.col === col))) {
                             cell.classList.add('last-move');
@@ -483,19 +715,7 @@
                 }
             }
 
-            updateTurnIndicator();
-        }
-
-        // Update turn indicator
-        function updateTurnIndicator() {
-            document.querySelectorAll('.player-badge').forEach(badge => {
-                const player = badge.dataset.player;
-                badge.classList.remove('active');
-                badge.classList.toggle('eliminated', eliminatedPlayers.has(player));
-                if (player === currentPlayer && !eliminatedPlayers.has(player)) {
-                    badge.classList.add('active');
-                }
-            });
+            updateClockDisplay();
         }
 
         // Get valid moves for a piece
@@ -530,51 +750,56 @@
             return moves;
         }
 
-        // Pawn moves (direction depends on player)
+        // Pawn moves - simplified, pawns move toward center
         function getPawnMoves(row, col, player) {
             const moves = [];
-            let forwardDirs, captureDirs, startRows;
+            
+            // Determine direction based on starting position
+            let forwardDirs = [];
+            let captureDirs = [];
+            let isStartPos = false;
 
-            // Define movement based on player position
+            // Cardinal players (edges)
             if (player === 'red') {
                 forwardDirs = [[1, 0]];
                 captureDirs = [[1, -1], [1, 1]];
-                startRows = [1];
-            } else if (player === 'yellow') {
+                isStartPos = row === 1;
+            } else if (player === 'cyan') {
                 forwardDirs = [[-1, 0]];
                 captureDirs = [[-1, -1], [-1, 1]];
-                startRows = [12];
-            } else if (player === 'green') {
+                isStartPos = row === 14;
+            } else if (player === 'purple') {
                 forwardDirs = [[0, 1]];
                 captureDirs = [[-1, 1], [1, 1]];
-                startRows = null; // Check column instead
-            } else if (player === 'blue') {
+                isStartPos = col === 1;
+            } else if (player === 'yellow') {
                 forwardDirs = [[0, -1]];
                 captureDirs = [[-1, -1], [1, -1]];
-                startRows = null;
+                isStartPos = col === 14;
+            } else if (player === 'pink') {
+                forwardDirs = [[1, 0], [0, 1]];
+                captureDirs = [[1, 1]];
+                isStartPos = (row <= 2 && col <= 4) || (col <= 2 && row <= 4);
+            } else if (player === 'orange') {
+                forwardDirs = [[1, 0], [0, -1]];
+                captureDirs = [[1, -1]];
+                isStartPos = (row <= 2 && col >= 11) || (col >= 13 && row <= 4);
+            } else if (player === 'green') {
+                forwardDirs = [[-1, 0], [0, -1]];
+                captureDirs = [[-1, -1]];
+                isStartPos = (row >= 13 && col >= 11) || (col >= 13 && row >= 11);
+            } else if (player === 'blue') {
+                forwardDirs = [[-1, 0], [0, 1]];
+                captureDirs = [[-1, 1]];
+                isStartPos = (row >= 13 && col <= 4) || (col <= 2 && row >= 11);
             }
 
-            // Forward move
+            // Forward moves
             for (const [dr, dc] of forwardDirs) {
                 const newRow = row + dr;
                 const newCol = col + dc;
                 if (isValidPosition(newRow, newCol) && !board[newRow][newCol]) {
                     moves.push({ row: newRow, col: newCol });
-
-                    // Double move from start
-                    let canDouble = false;
-                    if (player === 'red' && row === 1) canDouble = true;
-                    if (player === 'yellow' && row === 12) canDouble = true;
-                    if (player === 'green' && col === 1) canDouble = true;
-                    if (player === 'blue' && col === 12) canDouble = true;
-
-                    if (canDouble) {
-                        const doubleRow = row + dr * 2;
-                        const doubleCol = col + dc * 2;
-                        if (isValidPosition(doubleRow, doubleCol) && !board[doubleRow][doubleCol]) {
-                            moves.push({ row: doubleRow, col: doubleCol });
-                        }
-                    }
                 }
             }
 
@@ -645,9 +870,10 @@
 
         // Handle cell click
         function handleCellClick(row, col) {
+            if (gamePaused) return;
+            
             const piece = board[row][col];
 
-            // If clicking on own piece, select it
             if (piece && piece.player === currentPlayer && !eliminatedPlayers.has(currentPlayer)) {
                 selectedCell = { row, col };
                 validMoves = getValidMoves(row, col);
@@ -655,7 +881,6 @@
                 return;
             }
 
-            // If a piece is selected and clicking on valid move
             if (selectedCell && validMoves.some(m => m.row === row && m.col === col)) {
                 makeMove(selectedCell.row, selectedCell.col, row, col);
                 selectedCell = null;
@@ -664,7 +889,6 @@
                 return;
             }
 
-            // Deselect
             selectedCell = null;
             validMoves = [];
             renderBoard();
@@ -672,43 +896,41 @@
 
         // Make a move
         function makeMove(fromRow, fromCol, toRow, toCol) {
+            if (!gameStarted) {
+                gameStarted = true;
+                startClock();
+            }
+
             const piece = board[fromRow][fromCol];
             const capturedPiece = board[toRow][toCol];
 
-            // Save move for undo
             moveHistory.push({
                 from: { row: fromRow, col: fromCol },
                 to: { row: toRow, col: toCol },
                 piece: { ...piece },
                 captured: capturedPiece ? { ...capturedPiece } : null,
-                player: currentPlayer
+                player: currentPlayer,
+                time: playerTimes[currentPlayer]
             });
 
-            // Check for king capture
             if (capturedPiece && capturedPiece.type === 'king') {
                 eliminatedPlayers.add(capturedPiece.player);
-                showMessage(`${capturedPiece.player.charAt(0).toUpperCase() + capturedPiece.player.slice(1)} is eliminated!`, `Their king was captured by ${currentPlayer}.`);
-                
-                // Check for winner
-                const activePlayers = TURN_ORDER.filter(p => !eliminatedPlayers.has(p));
-                if (activePlayers.length === 1) {
-                    setTimeout(() => {
-                        showMessage(`${activePlayers[0].charAt(0).toUpperCase() + activePlayers[0].slice(1)} Wins!`, 'Congratulations on your victory!');
-                    }, 1500);
-                }
+                showMessage(`${capturedPiece.player.charAt(0).toUpperCase() + capturedPiece.player.slice(1)} eliminated!`, `Their king was captured by ${currentPlayer}.`);
+                checkForWinner();
             }
 
-            // Move piece
             board[toRow][toCol] = piece;
             board[fromRow][fromCol] = null;
 
-            // Pawn promotion
+            // Pawn promotion (simplified - promote at opposite edge)
             if (piece.type === 'pawn') {
                 let promote = false;
-                if (piece.player === 'red' && toRow === 13) promote = true;
-                if (piece.player === 'yellow' && toRow === 0) promote = true;
-                if (piece.player === 'green' && toCol === 13) promote = true;
-                if (piece.player === 'blue' && toCol === 0) promote = true;
+                if (piece.player === 'red' && toRow >= 13) promote = true;
+                if (piece.player === 'cyan' && toRow <= 2) promote = true;
+                if (piece.player === 'purple' && toCol >= 13) promote = true;
+                if (piece.player === 'yellow' && toCol <= 2) promote = true;
+                if (['pink', 'orange', 'green', 'blue'].includes(piece.player) && 
+                    toRow >= 6 && toRow <= 9 && toCol >= 6 && toCol <= 9) promote = true;
                 
                 if (promote) {
                     board[toRow][toCol].type = 'queen';
@@ -716,22 +938,32 @@
             }
 
             lastMove = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
-
-            // Next player
             nextTurn();
+        }
+
+        // Check for winner
+        function checkForWinner() {
+            const activePlayers = PLAYERS.filter(p => !eliminatedPlayers.has(p));
+            if (activePlayers.length === 1) {
+                setTimeout(() => {
+                    showMessage(`${activePlayers[0].charAt(0).toUpperCase() + activePlayers[0].slice(1)} Wins!`, 'Congratulations on your victory!');
+                    gameStarted = false;
+                    if (clockInterval) clearInterval(clockInterval);
+                }, 1500);
+            }
         }
 
         // Move to next turn
         function nextTurn() {
-            let nextIndex = (TURN_ORDER.indexOf(currentPlayer) + 1) % 4;
+            let nextIndex = (PLAYERS.indexOf(currentPlayer) + 1) % 8;
             let attempts = 0;
             
-            while (eliminatedPlayers.has(TURN_ORDER[nextIndex]) && attempts < 4) {
-                nextIndex = (nextIndex + 1) % 4;
+            while (eliminatedPlayers.has(PLAYERS[nextIndex]) && attempts < 8) {
+                nextIndex = (nextIndex + 1) % 8;
                 attempts++;
             }
             
-            currentPlayer = TURN_ORDER[nextIndex];
+            currentPlayer = PLAYERS[nextIndex];
         }
 
         // Undo last move
@@ -740,20 +972,18 @@
 
             const lastMoveData = moveHistory.pop();
             
-            // Restore piece
             board[lastMoveData.from.row][lastMoveData.from.col] = lastMoveData.piece;
             board[lastMoveData.to.row][lastMoveData.to.col] = lastMoveData.captured;
 
-            // Restore eliminated player if king was captured
             if (lastMoveData.captured && lastMoveData.captured.type === 'king') {
                 eliminatedPlayers.delete(lastMoveData.captured.player);
             }
 
+            playerTimes[lastMoveData.player] = lastMoveData.time;
             currentPlayer = lastMoveData.player;
             selectedCell = null;
             validMoves = [];
             
-            // Update last move indicator
             if (moveHistory.length > 0) {
                 const prev = moveHistory[moveHistory.length - 1];
                 lastMove = { from: prev.from, to: prev.to };
@@ -780,17 +1010,26 @@
 
         // Reset game
         function resetGame() {
+            if (clockInterval) clearInterval(clockInterval);
+            
             currentPlayer = 'red';
             selectedCell = null;
             validMoves = [];
             moveHistory = [];
             eliminatedPlayers.clear();
             lastMove = null;
+            gameStarted = false;
+            gamePaused = false;
+            document.getElementById('pauseBtn').textContent = 'Pause';
+            
+            initialTime = parseInt(document.getElementById('timeSelect').value);
+            
             initializeBoard();
+            initializeClocks();
             renderBoard();
         }
 
-        // Prevent default touch behaviors
+        // Prevent default touch behaviors on board
         document.addEventListener('touchmove', (e) => {
             if (e.target.closest('.board')) {
                 e.preventDefault();
